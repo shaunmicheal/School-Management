@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+model User {
+  id              Int          @id @default(autoincrement())
+  name            String
+  email           String       @unique
+  password        String
+  role            Role         @default(TEACHER)
+  createdAt       DateTime     @default(now())
+  class           Class?       @relation("ClassTeacher")
+  attendanceMarked Attendance[] @relation("MarkedBy")
+}
+
+model Class {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  teacherId Int?      @unique
+  teacher   User?     @relation("ClassTeacher", fields: [teacherId], references: [id])
+  students  Student[]
+}
+
+model Student {
+  id          Int          @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime
+  gender      Gender
+  parentName  String
+  parentPhone String
+  address     String
+  classId     Int
+  class       Class        @relation(fields: [classId], references: [id])
+  attendance  Attendance[]
+}
+
+model Attendance {
+  id         Int      @id @default(autoincrement())
+  date       DateTime @default(now())
+  present    Boolean  @default(true)
+  studentId  Int
+  student    Student  @relation(fields: [studentId], references: [id])
+  markedById Int
+  markedBy   User     @relation("MarkedBy", fields: [markedById], references: [id])
+
+  @@unique([studentId, date])
+}
