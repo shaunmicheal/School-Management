@@ -1,20 +1,22 @@
 const express = require("express");
 const router = express.Router();
 
-const authenticate = require("../middleware/authMiddleware");
-const requireAdmin = require("../middleware/requireAdmin");
-const requireClassOwnership = require("../middleware/requireClassOwnership");
 const {
-  getAllClasses,
-  getClassById,
-  assignTeacher,
-} = require("../controllers/classController");
+  authenticateToken,
+  requireAdmin,
+} = require("../middleware/authMiddleware");
 
-router.get("/", authenticate, getAllClasses);
-router.get("/:classId", authenticate, requireClassOwnership, getClassById);
+const classController = require("../controllers/classController");
+
+const getAllClasses = classController.getAllClasses;
+const getClassById = classController.getClassById;
+const assignTeacher = classController.assignTeacher;
+
+router.get("/", authenticateToken, getAllClasses);
+router.get("/:classId", authenticateToken, getClassById);
 router.put(
   "/:classId/assign-teacher",
-  authenticate,
+  authenticateToken,
   requireAdmin,
   assignTeacher,
 );

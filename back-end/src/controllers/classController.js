@@ -39,16 +39,55 @@ async function assignTeacher(req, res) {
   const { classId } = req.params;
   const { teacherId } = req.body;
 
+  const parsedClassId = parseInt(classId);
+  const parsedTeacherId = teacherId ? parseInt(teacherId) : null;
+
+  if (isNaN(parsedClassId)) {
+    return res.status(400).json({ message: "Invalid class ID" });
+  }
+
   try {
+    const classExists = await prisma.class.findUnique({
+      where: { id: parsedClassId },
+    });
+
+    if (!classExists) {
+      return res
+        .status(404)
+        .json({ message: `Class with ID ${parsedClassId} not found` });
+    }
+
+    if (parsedTeacherId) {
+      const teacherExists = await prisma.user.findUnique({
+        where: { id: parsedTeacherId },
+      });
+
+      if (!teacherExists) {
+        return res
+          .status(404)
+          .json({ message: `Teacher with ID ${parsedTeacherId} not found` });
+      }
+    }
+
     const updatedClass = await prisma.class.update({
-      where: { id: parseInt(classId) },
-      data: { teacherId: parseInt(teacherId) },
+      where: { id: parsedClassId },
+      data: { teacherId: parsedTeacherId },
+      include: {
+        teacher: { select: { id: true, name: true, email: true } },
+      },
     });
 
     res.json(updatedClass);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error("Assign Teacher Error:", error);
+
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        message: "This teacher is already assigned to another class.",
+      });
+    }
+
+    res.status(500).json({ message: error.message || "Server error" });
   }
 }
 
