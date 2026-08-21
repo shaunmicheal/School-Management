@@ -63,7 +63,7 @@ router.get("/", async (req, res) => {
 
     const formattedRecords = records.map((record) => ({
       ...record,
-      status: record.status || (record.present ? "PRESENT" : "ABSENT"),
+      status: record.present ? "PRESENT" : "ABSENT",
     }));
 
     res.json(formattedRecords);
@@ -85,7 +85,6 @@ router.post("/", async (req, res) => {
       const results = await Promise.all(
         records.map(async (item) => {
           const isPresent = item.status === "PRESENT" || item.present === true;
-          const statusValue = item.status || (isPresent ? "PRESENT" : "ABSENT");
           const parsedStudentId = parseInt(item.studentId, 10);
 
           if (isNaN(parsedStudentId)) {
@@ -94,14 +93,12 @@ router.post("/", async (req, res) => {
 
           const updateData = {
             present: isPresent,
-            status: statusValue,
           };
           if (userId !== undefined) updateData.markedById = userId;
 
           const createData = {
             studentId: parsedStudentId,
             present: isPresent,
-            status: statusValue,
             date: attendanceDate,
           };
           if (userId !== undefined) createData.markedById = userId;
@@ -125,7 +122,6 @@ router.post("/", async (req, res) => {
     }
 
     const isPresent = status === "PRESENT" || present === true;
-    const statusValue = status || (isPresent ? "PRESENT" : "ABSENT");
     const parsedStudentId = parseInt(studentId, 10);
 
     if (isNaN(parsedStudentId)) {
@@ -134,14 +130,12 @@ router.post("/", async (req, res) => {
 
     const updateData = {
       present: isPresent,
-      status: statusValue,
     };
     if (userId !== undefined) updateData.markedById = userId;
 
     const createData = {
       studentId: parsedStudentId,
       present: isPresent,
-      status: statusValue,
       date: attendanceDate,
     };
     if (userId !== undefined) createData.markedById = userId;
@@ -181,7 +175,7 @@ router.get("/class/:classId", async (req, res) => {
 
     const formattedRecords = records.map((record) => ({
       ...record,
-      status: record.status || (record.present ? "PRESENT" : "ABSENT"),
+      status: record.present ? "PRESENT" : "ABSENT",
     }));
 
     res.json(formattedRecords);
