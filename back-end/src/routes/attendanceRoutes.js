@@ -4,6 +4,37 @@ const prisma = require("../../db");
 const { authenticateToken } = require("../middleware/authMiddleware");
 
 router.use(authenticateToken);
+router.get("/", async (req, res) => {
+  try {
+    let whereClause = {};
+
+    if (req.user.role !== "ADMIN") {
+      const teacherClass = await prisma.class.findUnique({
+        where: { teacherId: req.user.id },
+      });
+
+      if (!teacherClass) {
+        return res.json([]);
+      }
+      whereClause = { student: { classId: teacherClass.id } };
+    }
+
+    const records = await prisma.attendance.findMany({
+      where: whereClause,
+      include: {
+        student: {
+          include: { class: true },
+        },
+        markedBy: { select: { id: true, name: true, role: true } },
+      },
+      orderBy: { date: "desc" },
+    });
+
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 router.post("/", async (req, res) => {
   const { studentId, present, date } = req.body;
@@ -31,6 +62,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 router.get("/class/:classId", async (req, res) => {
   const classId = parseInt(req.params.classId);
 

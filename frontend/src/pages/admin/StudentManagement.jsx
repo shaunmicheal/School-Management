@@ -19,6 +19,7 @@ const StudentManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     dateOfBirth: "",
+    gender: "MALE",
     classId: "",
   });
 
@@ -62,7 +63,12 @@ const StudentManagement = () => {
         type: "success",
         text: `Student ${formData.name} enrolled successfully!`,
       });
-      setFormData({ name: "", dateOfBirth: "", classId: classes[0]?.id || "" });
+      setFormData({
+        name: "",
+        dateOfBirth: "",
+        gender: "MALE",
+        classId: classes[0]?.id || "",
+      });
       await fetchData();
     } catch (err) {
       setMessage({
@@ -71,6 +77,9 @@ const StudentManagement = () => {
       });
     } finally {
       setSubmitting(false);
+      setTimeout(() => {
+        setMessage({ type: "", text: "" });
+      }, 5000);
     }
   };
 
@@ -92,6 +101,7 @@ const StudentManagement = () => {
           Enroll new learners and manage student class assignments.
         </p>
       </div>
+
       {message.text && (
         <div
           className={`flex items-center gap-2 rounded-lg p-4 text-sm font-medium border ${
@@ -150,6 +160,22 @@ const StudentManagement = () => {
 
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-1">
+                Gender
+              </label>
+              <select
+                name="gender"
+                required
+                value={formData.gender}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 focus:border-[#F97316] focus:outline-none focus:ring-1 focus:ring-[#F97316]"
+              >
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
                 Assigned Class
               </label>
               <select
@@ -176,6 +202,7 @@ const StudentManagement = () => {
             </button>
           </form>
         </div>
+
         <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
           <div className="flex items-center gap-2 bg-[#4A2E2B] px-6 py-4 text-white">
             <Users className="h-5 w-5 text-[#F97316]" />
@@ -207,17 +234,21 @@ const StudentManagement = () => {
                     className="hover:bg-stone-50 transition-colors"
                   >
                     <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                      {st.name}
+                      {st.name ||
+                        (st.firstName && `${st.firstName} ${st.lastName}`) ||
+                        "Unnamed Learner"}
                     </td>
                     <td className="px-6 py-4">
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F97316]/10 px-3 py-1 text-xs font-semibold text-[#F97316]">
                         <GraduationCap className="h-3.5 w-3.5" />
-                        {st.class?.name || "Unassigned"}
+                        {st.class?.name || st.className || "Unassigned"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-stone-600">
-                      {st.dateOfBirth
-                        ? new Date(st.dateOfBirth).toLocaleDateString()
+                      {st.dateOfBirth || st.dob
+                        ? new Date(
+                            st.dateOfBirth || st.dob,
+                          ).toLocaleDateString()
                         : "N/A"}
                     </td>
                   </tr>

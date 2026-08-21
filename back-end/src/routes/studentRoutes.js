@@ -7,7 +7,6 @@ const {
 } = require("../middleware/authMiddleware");
 
 router.use(authenticateToken);
-
 router.get("/", async (req, res) => {
   try {
     if (req.user.role === "ADMIN") {
@@ -37,9 +36,9 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 router.post("/", requireAdmin, async (req, res) => {
   const {
+    name,
     firstName,
     lastName,
     dateOfBirth,
@@ -51,26 +50,44 @@ router.post("/", requireAdmin, async (req, res) => {
   } = req.body;
 
   try {
+    let parsedFirstName = firstName;
+    let parsedLastName = lastName;
+
+    if (!parsedFirstName && name) {
+      const parts = name.trim().split(" ");
+      parsedFirstName = parts[0];
+      parsedLastName = parts.slice(1).join(" ") || "N/A";
+    }
+
+    const parsedClassId = parseInt(classId, 10);
+    if (isNaN(parsedClassId)) {
+      return res.status(400).json({ message: "Please select a valid class." });
+    }
+
+    const validGender = gender ? gender.toUpperCase() : "MALE";
+
+    const studentData = {
+      firstName: parsedFirstName || "Learner",
+      lastName: parsedLastName || "N/A",
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date(),
+      gender: validGender,
+      parentName: parentName || "N/A",
+      parentPhone: parentPhone || "N/A",
+      address: address || "N/A",
+      classId: parsedClassId,
+    };
+
     const student = await prisma.student.create({
-      data: {
-        firstName,
-        lastName,
-        dateOfBirth: new Date(dateOfBirth),
-        gender,
-        parentName,
-        parentPhone,
-        address,
-        classId: parseInt(classId),
-      },
+      data: studentData,
     });
+
     res.status(201).json(student);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ message: error.message });
   }
 });
-
 router.patch("/:id", async (req, res) => {
-  const studentId = parseInt(req.params.id);
+  const studentId = parseInt(req.params.id, 10);
 
   try {
     const existingStudent = await prisma.student.findUnique({
@@ -88,7 +105,6 @@ router.patch("/:id", async (req, res) => {
       });
       return res.json(updated);
     }
-
     const teacherClass = await prisma.class.findUnique({
       where: { teacherId: req.user.id },
     });
@@ -99,10 +115,33 @@ router.patch("/:id", async (req, res) => {
         .json({ message: "Access denied. Not your student." });
     }
 
-    const { parentPhone, address } = req.body;
+    const {
+      name,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      parentName,
+      parentPhone,
+      address,
+    } = req.body;
+
+    let parsedFirstName = firstName;
+    let parsedLastName = lastName;
+
+    if (!parsedFirstName && name) {
+      const parts = name.trim().split(" ");
+      parsedFirstName = parts[0];
+      parsedLastName = parts.slice(1).join(" ") || "N/A";
+    }
     const updated = await prisma.student.update({
       where: { id: studentId },
       data: {
+        ...(parsedFirstName && { firstName: parsedFirstName }),
+        ...(parsedLastName && { lastName: parsedLastName }),
+        ...(dateOfBirth && { dateOfBirth: new Date(dateOfBirth) }),
+        ...(gender && { gender: gender.toUpperCase() }),
+        ...(parentName && { parentName }),
         ...(parentPhone && { parentPhone }),
         ...(address && { address }),
       },
@@ -113,11 +152,10 @@ router.patch("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     await prisma.student.delete({
-      where: { id: parseInt(req.params.id) },
+      where: { id: parseInt(req.params.id, 10) },
     });
     res.json({ message: "Student deleted successfully" });
   } catch (error) {

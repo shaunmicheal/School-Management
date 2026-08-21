@@ -55,6 +55,9 @@ const ClassManagement = () => {
       });
     } finally {
       setUpdatingId(null);
+      setTimeout(() => {
+        setMessage({ type: "", text: "" });
+      }, 5000);
     }
   };
 

@@ -7,6 +7,7 @@ import {
   GraduationCap,
   ClipboardCheck,
   LogOut,
+  User,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -44,6 +45,9 @@ const Sidebar = () => {
   ];
 
   const links = user?.role === "ADMIN" ? adminLinks : teacherLinks;
+  const displayName =
+    user?.name || (user?.role === "ADMIN" ? "School Admin" : "Teacher");
+  const userInitial = displayName.charAt(0).toUpperCase();
 
   return (
     <aside className="flex h-screen w-64 flex-col bg-[#4A2E2B] text-white shadow-xl">
@@ -59,7 +63,7 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1.5 px-4 py-6">
+      <nav className="flex-1 space-y-1.5 px-4 py-6 overflow-y-auto">
         {links.map((link) => {
           const Icon = link.icon;
           return (
@@ -81,18 +85,27 @@ const Sidebar = () => {
         })}
       </nav>
 
-      <div className="border-t border-[#5C3A36] p-4">
-        <div className="mb-3 rounded-lg bg-[#361F1D] p-3">
-          <p className="text-sm font-semibold text-white truncate">
-            {user?.name || "User"}
-          </p>
-          <span className="inline-block rounded bg-[#F97316]/20 px-2 py-0.5 text-[10px] font-semibold text-[#F97316] uppercase">
-            {user?.role}
-          </span>
+      <div className="border-t border-[#5C3A36] p-4 space-y-3">
+        <div className="flex items-center gap-3 rounded-xl bg-[#361F1D] p-3 border border-[#5C3A36]/60 shadow-inner">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F97316] text-sm font-bold text-white shadow-sm">
+            {userInitial || <User className="h-4 w-4" />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-stone-100 truncate">
+              {displayName}
+            </p>
+            {user?.email && (
+              <p className="text-xs text-amber-200/60 truncate">{user.email}</p>
+            )}
+            <span className="mt-1 inline-block rounded bg-[#F97316]/20 px-2 py-0.5 text-[10px] font-semibold text-[#F97316] uppercase tracking-wider">
+              {user?.role || "USER"}
+            </span>
+          </div>
         </div>
+
         <button
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#5C3A36] px-4 py-2 text-sm font-medium text-amber-200 hover:bg-rose-950/40 hover:text-rose-200 transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#5C3A36] bg-[#361F1D]/40 px-4 py-2.5 text-sm font-medium text-amber-100 hover:bg-rose-950/60 hover:text-rose-200 hover:border-rose-900/50 transition-all"
         >
           <LogOut className="h-4 w-4" />
           <span>Sign Out</span>

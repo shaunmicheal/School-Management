@@ -5,13 +5,17 @@ import { AuthContext } from "../../context/AuthContext";
 
 const Layout = () => {
   const { user } = useContext(AuthContext);
+  const displayName =
+    user?.name ||
+    (user?.role
+      ? user.role.charAt(0) + user.role.slice(1).toLowerCase()
+      : "Guest");
 
   return (
     <div className="flex h-screen bg-[#FAFAFA] overflow-hidden">
       <Sidebar />
 
       <div className="flex flex-1 flex-col overflow-y-auto">
-        {/* Top Header Bar */}
         <header className="flex h-16 items-center justify-between border-b border-stone-200 bg-white px-8 shadow-sm">
           <h2 className="text-lg font-semibold text-[#361F1D]">
             School Management System
@@ -19,7 +23,9 @@ const Layout = () => {
           <div className="flex items-center gap-3">
             <span className="text-xs font-medium text-stone-500">
               Logged in as:{" "}
-              <strong className="text-[#4A2E2B]">{user?.email}</strong>
+              <strong className="text-[#4A2E2B] font-semibold">
+                {displayName}
+              </strong>
             </span>
           </div>
         </header>
