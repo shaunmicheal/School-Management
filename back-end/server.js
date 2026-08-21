@@ -20,6 +20,14 @@ app.use("/students", studentRoutes);
 app.use("/attendance", attendanceRoutes);
 app.use("/users", userRoutes);
 app.use("/classes", classRoutes);
+app.use((err, req, res, next) => {
+  console.error("🔥 SERVER ERROR STACK TRACE:", err);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: err.message,
+    stack: err.stack,
+  });
+});
 
 app.get("/", (req, res) => {
   res.send("Rumbidzai ECD School API is live");
