@@ -4,15 +4,30 @@ const prisma = require("../../db");
 const { authenticateToken } = require("../middleware/authMiddleware");
 
 router.use(authenticateToken);
+const parseAttendanceDate = (dateStr) => {
+  if (!dateStr) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return today;
+  }
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return today;
+  }
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+};
+
 router.get("/", async (req, res) => {
   try {
     const { date, classId } = req.query;
     let whereClause = {};
 
-    // 1. Role / Class access controls
     if (req.user.role !== "ADMIN") {
       const teacherClass = await prisma.class.findUnique({
-        where: { teacherId: req.user.id },
+        where: { teacherId: parseInt(req.user.id, 10) },
       });
 
       if (!teacherClass) {
@@ -22,9 +37,11 @@ router.get("/", async (req, res) => {
     } else if (classId && classId !== "ALL" && classId !== "") {
       whereClause.student = { classId: parseInt(classId, 10) };
     }
+
     if (date) {
-      const startOfDay = new Date(`${date}T00:00:00.000Z`);
-      const endOfDay = new Date(`${date}T23:59:59.999Z`);
+      const startOfDay = parseAttendanceDate(date);
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setUTCHours(23, 59, 59, 999);
 
       whereClause.date = {
         gte: startOfDay,
@@ -42,6 +59,7 @@ router.get("/", async (req, res) => {
       },
       orderBy: { date: "desc" },
     });
+
     const formattedRecords = records.map((record) => ({
       ...record,
       status: record.status || (record.present ? "PRESENT" : "ABSENT"),
@@ -49,12 +67,15 @@ router.get("/", async (req, res) => {
 
     res.json(formattedRecords);
   } catch (error) {
+    console.error("GET /attendance error:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 router.post("/", async (req, res) => {
   const { studentId, present, status, date, records } = req.body;
-  const attendanceDate = date ? new Date(`${date}T00:00:00.000Z`) : new Date();
+  const attendanceDate = parseAttendanceDate(date);
+  const userId = req.user?.id ? parseInt(req.user.id, 10) : null;
 
   try {
     if (Array.isArray(records)) {
@@ -62,25 +83,26 @@ router.post("/", async (req, res) => {
         records.map(async (item) => {
           const isPresent = item.status === "PRESENT" || item.present === true;
           const statusValue = item.status || (isPresent ? "PRESENT" : "ABSENT");
+          const parsedStudentId = parseInt(item.studentId, 10);
 
           return prisma.attendance.upsert({
             where: {
               studentId_date: {
-                studentId: parseInt(item.studentId, 10),
+                studentId: parsedStudentId,
                 date: attendanceDate,
               },
             },
             update: {
               present: isPresent,
               ...(item.status && { status: statusValue }),
-              markedById: req.user.id,
+              ...(userId && { markedById: userId }),
             },
             create: {
-              studentId: parseInt(item.studentId, 10),
+              studentId: parsedStudentId,
               present: isPresent,
-              ...(item.status && { status: statusValue }),
+              status: statusValue,
               date: attendanceDate,
-              markedById: req.user.id,
+              ...(userId && { markedById: userId }),
             },
           });
         }),
@@ -93,33 +115,36 @@ router.post("/", async (req, res) => {
 
     const isPresent = status === "PRESENT" || present === true;
     const statusValue = status || (isPresent ? "PRESENT" : "ABSENT");
+    const parsedStudentId = parseInt(studentId, 10);
 
     const record = await prisma.attendance.upsert({
       where: {
         studentId_date: {
-          studentId: parseInt(studentId, 10),
+          studentId: parsedStudentId,
           date: attendanceDate,
         },
       },
       update: {
         present: isPresent,
         ...(status && { status: statusValue }),
-        markedById: req.user.id,
+        ...(userId && { markedById: userId }),
       },
       create: {
-        studentId: parseInt(studentId, 10),
+        studentId: parsedStudentId,
         present: isPresent,
-        ...(status && { status: statusValue }),
+        status: statusValue,
         date: attendanceDate,
-        markedById: req.user.id,
+        ...(userId && { markedById: userId }),
       },
     });
 
     res.json(record);
   } catch (error) {
+    console.error("POST /attendance error:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 router.get("/class/:classId", async (req, res) => {
   const classId = parseInt(req.params.classId, 10);
 
@@ -142,6 +167,7 @@ router.get("/class/:classId", async (req, res) => {
 
     res.json(formattedRecords);
   } catch (error) {
+    console.error("GET /attendance/class error:", error);
     res.status(500).json({ error: error.message });
   }
 });
