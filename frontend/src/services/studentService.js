@@ -35,24 +35,26 @@ export const getClassStudents = async (classId) => {
   const response = await API.get(`/classes/${classId}`);
   return response.data.students || [];
 };
-
 export const submitAttendance = async (classId, date, attendanceRecords) => {
-  const promises = attendanceRecords.map((record) =>
-    API.post("/attendance", {
+  const payload = {
+    classId: parseInt(classId, 10),
+    date,
+    records: attendanceRecords.map((record) => ({
       studentId: parseInt(record.studentId, 10),
-      present: record.present,
-      date,
-    }),
-  );
+      status: record.status || (record.present ? "PRESENT" : "ABSENT"),
+      present: record.status === "PRESENT" || record.present === true,
+    })),
+  };
 
-  const results = await Promise.all(promises);
-  return results.map((res) => res.data);
+  const response = await API.post("/attendance", payload);
+  return response.data;
 };
-
 export const getAttendanceLogs = async (date, classId) => {
   const params = {};
   if (date) params.date = date;
-  if (classId) params.classId = classId;
+  if (classId && classId !== "ALL" && classId !== "") {
+    params.classId = classId;
+  }
 
   const response = await API.get("/attendance", { params });
   return response.data;

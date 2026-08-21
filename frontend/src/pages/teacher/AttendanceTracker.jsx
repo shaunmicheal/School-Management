@@ -236,7 +236,7 @@ const AttendanceTracker = () => {
         setMessage({ type: "", text: "" });
       }, 3000);
 
-      return () => clearTimeout(timer); // Cleanup timer if component unmounts or message changes
+      return () => clearTimeout(timer);
     }
   }, [message]);
 

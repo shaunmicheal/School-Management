@@ -15,7 +15,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-// Modal Component for Editing Student Details
 const EditStudentModal = ({ student, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({
     firstName: student.firstName || "",
@@ -53,7 +52,7 @@ const EditStudentModal = ({ student, onClose, onUpdated }) => {
       <div className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between pb-1">
           <h3 className="text-lg font-bold text-[#361F1D]">
-            Edit Details – {studentFullName}
+            Edit {studentFullName}'s Details
           </h3>
           <button
             onClick={onClose}

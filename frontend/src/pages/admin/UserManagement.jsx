@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getUsers, createUser } from "../../services/userService";
+import { getUsers, createUser, deleteUser } from "../../services/userService";
 import {
   UserPlus,
   Users,
@@ -7,12 +7,14 @@ import {
   AlertCircle,
   Shield,
   GraduationCap,
+  Trash2,
 } from "lucide-react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   const [formData, setFormData] = useState({
@@ -64,6 +66,35 @@ const UserManagement = () => {
     }
   };
 
+  const handleDeleteUser = async (userId, userName) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete account for "${userName}"?`,
+      )
+    ) {
+      return;
+    }
+
+    setDeletingId(userId);
+    setMessage({ type: "", text: "" });
+
+    try {
+      await deleteUser(userId);
+      setUsers((prevUsers) => prevUsers.filter((u) => u.id !== userId));
+      setMessage({
+        type: "success",
+        text: `User "${userName}" deleted successfully.`,
+      });
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to delete user account.",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -82,6 +113,7 @@ const UserManagement = () => {
           Register new Teachers or Admins and view system access accounts.
         </p>
       </div>
+
       {message.text && (
         <div
           className={`flex items-center gap-2 rounded-lg p-4 text-sm font-medium border ${
@@ -178,6 +210,7 @@ const UserManagement = () => {
             </button>
           </form>
         </div>
+
         <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
           <div className="flex items-center gap-2 bg-[#4A2E2B] px-6 py-4 text-white">
             <Users className="h-5 w-5 text-[#F97316]" />
@@ -190,6 +223,7 @@ const UserManagement = () => {
                 <th className="px-6 py-3">Name & Email</th>
                 <th className="px-6 py-3">Role</th>
                 <th className="px-6 py-3">Assigned Class</th>
+                <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-sm">
@@ -220,6 +254,18 @@ const UserManagement = () => {
                       u.class.name
                     ) : (
                       <span className="text-stone-400 font-normal">—</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    {u.role !== "ADMIN" && (
+                      <button
+                        onClick={() => handleDeleteUser(u.id, u.name)}
+                        disabled={deletingId === u.id}
+                        className="rounded-lg p-1.5 text-stone-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50"
+                        title="Delete User Account"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     )}
                   </td>
                 </tr>

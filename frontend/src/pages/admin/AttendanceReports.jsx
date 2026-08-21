@@ -24,7 +24,7 @@ const AttendanceReports = () => {
   const loadFilterOptions = async () => {
     try {
       const classList = await getClasses();
-      setClasses(classList);
+      setClasses(classList || []);
     } catch (err) {
       setError("Failed to load class list.");
     }
@@ -35,7 +35,7 @@ const AttendanceReports = () => {
     setError("");
     try {
       const data = await getAttendanceLogs(selectedDate, selectedClass);
-      setLogs(data);
+      setLogs(data || []);
     } catch (err) {
       setError(
         err.response?.data?.message || "Failed to retrieve attendance logs.",
@@ -52,10 +52,22 @@ const AttendanceReports = () => {
   useEffect(() => {
     fetchLogs();
   }, [selectedDate, selectedClass]);
-  const totalRecords = logs.length;
-  const presentCount = logs.filter((l) => l.status === "PRESENT").length;
-  const absentCount = logs.filter((l) => l.status === "ABSENT").length;
-  const lateCount = logs.filter((l) => l.status === "LATE").length;
+  const normalizedLogs = logs.map((log) => {
+    let resolvedStatus = log.status?.toUpperCase();
+    if (!resolvedStatus) {
+      resolvedStatus = log.present ? "PRESENT" : "ABSENT";
+    }
+    return { ...log, status: resolvedStatus };
+  });
+
+  const totalRecords = normalizedLogs.length;
+  const presentCount = normalizedLogs.filter(
+    (l) => l.status === "PRESENT",
+  ).length;
+  const absentCount = normalizedLogs.filter(
+    (l) => l.status === "ABSENT",
+  ).length;
+  const lateCount = normalizedLogs.filter((l) => l.status === "LATE").length;
 
   return (
     <div className="space-y-8">
@@ -134,6 +146,7 @@ const AttendanceReports = () => {
           </p>
         </div>
       </div>
+
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-800 border border-rose-200">
           <AlertCircle className="h-5 w-5 text-rose-600" />
@@ -152,7 +165,7 @@ const AttendanceReports = () => {
           <div className="flex h-48 items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#F97316] border-t-transparent"></div>
           </div>
-        ) : logs.length === 0 ? (
+        ) : normalizedLogs.length === 0 ? (
           <div className="p-8 text-center text-stone-500">
             No attendance records logged for the selected date or class filter.
           </div>
@@ -167,42 +180,52 @@ const AttendanceReports = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-sm">
-              {logs.map((log) => (
-                <tr
-                  key={log.id}
-                  className="hover:bg-stone-50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                    {log.student?.name || `Student #${log.studentId}`}
-                  </td>
-                  <td className="px-6 py-4 text-stone-600">
-                    {log.class?.name || "N/A"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        log.status === "PRESENT"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : log.status === "ABSENT"
-                            ? "bg-rose-100 text-rose-800"
-                            : "bg-amber-100 text-amber-800"
-                      }`}
-                    >
-                      {log.status === "PRESENT" && (
-                        <CheckCircle2 className="h-3 w-3" />
-                      )}
-                      {log.status === "ABSENT" && (
-                        <XCircle className="h-3 w-3" />
-                      )}
-                      {log.status === "LATE" && <Clock className="h-3 w-3" />}
-                      {log.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-stone-500 text-xs">
-                    {new Date(log.date).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
+              {normalizedLogs.map((log) => {
+                const studentName =
+                  log.student?.firstName && log.student?.lastName
+                    ? `${log.student.firstName} ${log.student.lastName}`
+                    : log.student?.name ||
+                      `Student #${log.studentId || log.id}`;
+
+                // Safely extract nested class name
+                const className =
+                  log.student?.class?.name || log.class?.name || "N/A";
+
+                return (
+                  <tr
+                    key={log.id}
+                    className="hover:bg-stone-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 font-semibold text-[#361F1D]">
+                      {studentName}
+                    </td>
+                    <td className="px-6 py-4 text-stone-600">{className}</td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          log.status === "PRESENT"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : log.status === "ABSENT"
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {log.status === "PRESENT" && (
+                          <CheckCircle2 className="h-3 w-3" />
+                        )}
+                        {log.status === "ABSENT" && (
+                          <XCircle className="h-3 w-3" />
+                        )}
+                        {log.status === "LATE" && <Clock className="h-3 w-3" />}
+                        {log.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-stone-500 text-xs">
+                      {new Date(log.date).toLocaleDateString()}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
