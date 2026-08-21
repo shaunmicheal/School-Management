@@ -16,18 +16,25 @@ import {
 } from "lucide-react";
 
 const EditStudentModal = ({ student, onClose, onUpdated }) => {
+  const parseDate = (dateString) => {
+    if (!dateString) return "";
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime())
+      ? ""
+      : parsed.toISOString().split("T")[0];
+  };
+
   const [formData, setFormData] = useState({
     firstName: student.firstName || "",
     lastName: student.lastName || "",
     parentName: student.parentName === "N/A" ? "" : student.parentName || "",
     parentPhone: student.parentPhone === "N/A" ? "" : student.parentPhone || "",
     address: student.address === "N/A" ? "" : student.address || "",
-    dateOfBirth: student.dateOfBirth
-      ? new Date(student.dateOfBirth).toISOString().split("T")[0]
-      : "",
+    dateOfBirth: parseDate(student.dateOfBirth),
     gender: student.gender || "MALE",
   });
   const [saving, setSaving] = useState(false);
+
   const studentFullName =
     student.firstName && student.lastName
       ? `${student.firstName} ${student.lastName}`
@@ -169,6 +176,7 @@ const EditStudentModal = ({ student, onClose, onUpdated }) => {
               placeholder="Home address"
             />
           </div>
+
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
@@ -326,7 +334,7 @@ const TeacherDashboard = () => {
                       <td className="px-6 py-4 text-stone-700">
                         {st.address && st.address !== "N/A" ? (
                           <div className="flex max-w-xs items-center gap-1.5 truncate">
-                            <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-stone-400" />
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-stone-400" />
                             <span className="truncate">{st.address}</span>
                           </div>
                         ) : (

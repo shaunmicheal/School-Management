@@ -43,15 +43,22 @@ const ClassManagement = () => {
   const handleAssignTeacher = async (classId, teacherId) => {
     setUpdatingId(classId);
     setMessage({ type: "", text: "" });
+    const isUnassigning = !teacherId;
 
     try {
       await assignTeacherToClass(classId, teacherId);
-      setMessage({ type: "success", text: "Teacher assigned successfully!" });
+      setMessage({
+        type: "success",
+        text: isUnassigning
+          ? "Teacher unassigned successfully!"
+          : "Teacher assigned successfully!",
+      });
       await fetchData();
     } catch (err) {
       setMessage({
         type: "error",
-        text: err.response?.data?.message || "Failed to assign teacher.",
+        text:
+          err.response?.data?.message || "Failed to update teacher assignment.",
       });
     } finally {
       setUpdatingId(null);
