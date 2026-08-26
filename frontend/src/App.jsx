@@ -18,6 +18,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
           <Route
             element={<ProtectedRoute allowedRoles={["ADMIN", "TEACHER"]} />}
           >
@@ -32,7 +34,6 @@ function App() {
                 />
                 <Route path="/admin/users" element={<UserManagement />} />
               </Route>
-
               <Route element={<ProtectedRoute allowedRoles={["TEACHER"]} />}>
                 <Route
                   path="/teacher/dashboard"

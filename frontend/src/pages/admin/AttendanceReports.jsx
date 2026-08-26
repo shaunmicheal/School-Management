@@ -52,6 +52,7 @@ const AttendanceReports = () => {
   useEffect(() => {
     fetchLogs();
   }, [selectedDate, selectedClass]);
+
   const normalizedLogs = logs.map((log) => {
     let resolvedStatus = log.status?.toUpperCase();
     if (!resolvedStatus) {
@@ -79,34 +80,38 @@ const AttendanceReports = () => {
           Review historical daily attendance records across all classes.
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-[#F97316]" />
           <span className="text-sm font-semibold text-[#361F1D]">Filters:</span>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-stone-300 bg-stone-50 px-3 py-1.5 text-sm">
-          <Calendar className="h-4 w-4 text-stone-500" />
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-transparent text-stone-800 outline-none"
-          />
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-1 sm:flex-none items-center gap-2 rounded-lg border border-stone-300 bg-stone-50 px-3 py-1.5 text-sm">
+            <Calendar className="h-4 w-4 text-stone-500 shrink-0" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="bg-transparent text-stone-800 outline-none w-full"
+            />
+          </div>
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="flex-1 sm:flex-none rounded-lg border border-stone-300 bg-stone-50 px-3 py-1.5 text-sm text-stone-800 outline-none focus:border-[#F97316]"
+          >
+            <option value="">All Classes</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          value={selectedClass}
-          onChange={(e) => setSelectedClass(e.target.value)}
-          className="rounded-lg border border-stone-300 bg-stone-50 px-3 py-1.5 text-sm text-stone-800 outline-none focus:border-[#F97316]"
-        >
-          <option value="">All Classes</option>
-          {classes.map((cls) => (
-            <option key={cls.id} value={cls.id}>
-              {cls.name}
-            </option>
-          ))}
-        </select>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
           <p className="text-xs font-bold uppercase text-stone-400">
             Total Logs
@@ -149,13 +154,14 @@ const AttendanceReports = () => {
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg bg-rose-50 p-4 text-sm text-rose-800 border border-rose-200">
-          <AlertCircle className="h-5 w-5 text-rose-600" />
+          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
           <span>{error}</span>
         </div>
       )}
+
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <div className="flex items-center gap-2 bg-[#4A2E2B] px-6 py-4 text-white">
-          <FileSpreadsheet className="h-5 w-5 text-[#F97316]" />
+          <FileSpreadsheet className="h-5 w-5 text-[#F97316] shrink-0" />
           <h2 className="font-bold">
             Records for {new Date(selectedDate).toLocaleDateString()}
           </h2>
@@ -170,64 +176,67 @@ const AttendanceReports = () => {
             No attendance records logged for the selected date or class filter.
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
-                <th className="px-6 py-3">Student Name</th>
-                <th className="px-6 py-3">Class</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Logged Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100 text-sm">
-              {normalizedLogs.map((log) => {
-                const studentName =
-                  log.student?.firstName && log.student?.lastName
-                    ? `${log.student.firstName} ${log.student.lastName}`
-                    : log.student?.name ||
-                      `Student #${log.studentId || log.id}`;
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
+                  <th className="px-6 py-3">Student Name</th>
+                  <th className="px-6 py-3">Class</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Logged Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100 text-sm">
+                {normalizedLogs.map((log) => {
+                  const studentName =
+                    log.student?.firstName && log.student?.lastName
+                      ? `${log.student.firstName} ${log.student.lastName}`
+                      : log.student?.name ||
+                        `Student #${log.studentId || log.id}`;
 
-                // Safely extract nested class name
-                const className =
-                  log.student?.class?.name || log.class?.name || "N/A";
+                  const className =
+                    log.student?.class?.name || log.class?.name || "N/A";
 
-                return (
-                  <tr
-                    key={log.id}
-                    className="hover:bg-stone-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                      {studentName}
-                    </td>
-                    <td className="px-6 py-4 text-stone-600">{className}</td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                          log.status === "PRESENT"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : log.status === "ABSENT"
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-amber-100 text-amber-800"
-                        }`}
-                      >
-                        {log.status === "PRESENT" && (
-                          <CheckCircle2 className="h-3 w-3" />
-                        )}
-                        {log.status === "ABSENT" && (
-                          <XCircle className="h-3 w-3" />
-                        )}
-                        {log.status === "LATE" && <Clock className="h-3 w-3" />}
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-stone-500 text-xs">
-                      {new Date(log.date).toLocaleDateString()}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  return (
+                    <tr
+                      key={log.id}
+                      className="hover:bg-stone-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-semibold text-[#361F1D]">
+                        {studentName}
+                      </td>
+                      <td className="px-6 py-4 text-stone-600">{className}</td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            log.status === "PRESENT"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : log.status === "ABSENT"
+                                ? "bg-rose-100 text-rose-800"
+                                : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {log.status === "PRESENT" && (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          {log.status === "ABSENT" && (
+                            <XCircle className="h-3 w-3" />
+                          )}
+                          {log.status === "LATE" && (
+                            <Clock className="h-3 w-3" />
+                          )}
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-stone-500 text-xs">
+                        {new Date(log.date).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

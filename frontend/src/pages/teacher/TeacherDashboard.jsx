@@ -14,6 +14,7 @@ import {
   MapPin,
   UserCheck,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 
 const EditStudentModal = ({ student, onClose, onUpdated }) => {
@@ -24,49 +25,70 @@ const EditStudentModal = ({ student, onClose, onUpdated }) => {
   };
 
   const [formData, setFormData] = useState({
-    firstName: student.firstName || "",
-    lastName: student.lastName || "",
-    parentName: student.parentName === "N/A" ? "" : student.parentName || "",
-    parentPhone: student.parentPhone === "N/A" ? "" : student.parentPhone || "",
-    address: student.address === "N/A" ? "" : student.address || "",
-    dateOfBirth: parseDate(student.dateOfBirth),
-    gender: student.gender || "MALE",
+    firstName: student?.firstName || "",
+    lastName: student?.lastName || "",
+    parentName: student?.parentName === "N/A" ? "" : student?.parentName || "",
+    parentPhone:
+      student?.parentPhone === "N/A" ? "" : student?.parentPhone || "",
+    address: student?.address === "N/A" ? "" : student?.address || "",
+    dateOfBirth: parseDate(student?.dateOfBirth),
+    gender: student?.gender || "MALE",
   });
+
   const [saving, setSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const studentFullName =
-    student.firstName && student.lastName
+    student?.firstName && student?.lastName
       ? `${student.firstName} ${student.lastName}`
-      : student.name || `Student #${student.id}`;
+      : student?.name || `Student #${student?.id}`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setErrorMessage("");
+
     try {
       await API.patch(`/students/${student.id}`, formData);
       onUpdated();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update student profile.");
+      setErrorMessage(
+        err.response?.data?.message || "Failed to update student profile.",
+      );
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between pb-1">
           <h3 className="text-lg font-bold text-[#361F1D]">
             Edit {studentFullName}'s Details
           </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="text-stone-400 hover:text-stone-600"
+            className="rounded-lg p-1 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {errorMessage && (
+          <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+            <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -187,9 +209,10 @@ const EditStudentModal = ({ student, onClose, onUpdated }) => {
             <button
               type="submit"
               disabled={saving}
-              className="rounded-lg bg-[#F97316] px-4 py-2 text-xs font-semibold text-white hover:bg-[#EA580C] disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg bg-[#F97316] px-4 py-2 text-xs font-semibold text-white hover:bg-[#EA580C] disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save Details"}
+              {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              <span>{saving ? "Saving..." : "Save Details"}</span>
             </button>
           </div>
         </form>
@@ -251,7 +274,7 @@ const TeacherDashboard = () => {
 
       {!assignedClass ? (
         <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
-          <AlertCircle className="h-6 w-6 text-amber-600" />
+          <AlertCircle className="h-6 w-6 text-amber-600 shrink-0" />
           <div>
             <h3 className="font-bold">No Class Assigned</h3>
             <p className="text-sm text-amber-700">
@@ -268,99 +291,104 @@ const TeacherDashboard = () => {
             </div>
           </div>
 
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
-                <th className="px-6 py-3">Learner Name</th>
-                <th className="px-6 py-3">Parent / Guardian</th>
-                <th className="px-6 py-3">Contact</th>
-                <th className="px-6 py-3">Address</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100 text-sm">
-              {students.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="px-6 py-8 text-center text-stone-500"
-                  >
-                    No learners currently enrolled in this class.
-                  </td>
+          {/* Added horizontal scrolling container to protect table layout on small screens */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[650px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
+                  <th className="px-6 py-3">Learner Name</th>
+                  <th className="px-6 py-3">Parent / Guardian</th>
+                  <th className="px-6 py-3">Contact</th>
+                  <th className="px-6 py-3">Address</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
-              ) : (
-                students.map((st) => {
-                  const fullName =
-                    st.firstName && st.lastName
-                      ? `${st.firstName} ${st.lastName}`
-                      : st.name || `Student #${st.id}`;
-
-                  return (
-                    <tr
-                      key={st.id}
-                      className="transition-colors hover:bg-stone-50"
+              </thead>
+              <tbody className="divide-y divide-stone-100 text-sm">
+                {students.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="px-6 py-8 text-center text-stone-500"
                     >
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-[#361F1D]">
-                          {fullName}
-                        </div>
-                        <div className="text-xs text-stone-400">
-                          ID: #{st.id}
-                        </div>
-                      </td>
+                      No learners currently enrolled in this class.
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((st) => {
+                    const fullName =
+                      st.firstName && st.lastName
+                        ? `${st.firstName} ${st.lastName}`
+                        : st.name || `Student #${st.id}`;
 
-                      <td className="px-6 py-4 text-stone-700">
-                        {st.parentName && st.parentName !== "N/A" ? (
-                          <div className="flex items-center gap-1.5">
-                            <UserCheck className="h-3.5 w-3.5 text-stone-400" />
-                            {st.parentName}
+                    return (
+                      <tr
+                        key={st.id}
+                        className="transition-colors hover:bg-stone-50"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="font-semibold text-[#361F1D]">
+                            {fullName}
                           </div>
-                        ) : (
-                          <span className="inline-block rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                            Missing Info
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-6 py-4 text-stone-700">
-                        {st.parentPhone && st.parentPhone !== "N/A" ? (
-                          <div className="flex items-center gap-1.5">
-                            <Phone className="h-3.5 w-3.5 text-stone-400" />
-                            {st.parentPhone}
+                          <div className="text-xs text-stone-400">
+                            ID: #{st.id}
                           </div>
-                        ) : (
-                          <span className="text-xs text-stone-400">N/A</span>
-                        )}
-                      </td>
+                        </td>
 
-                      <td className="px-6 py-4 text-stone-700">
-                        {st.address && st.address !== "N/A" ? (
-                          <div className="flex max-w-xs items-center gap-1.5 truncate">
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-stone-400" />
-                            <span className="truncate">{st.address}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-stone-400">N/A</span>
-                        )}
-                      </td>
+                        <td className="px-6 py-4 text-stone-700">
+                          {st.parentName && st.parentName !== "N/A" ? (
+                            <div className="flex items-center gap-1.5">
+                              <UserCheck className="h-3.5 w-3.5 text-stone-400" />
+                              {st.parentName}
+                            </div>
+                          ) : (
+                            <span className="inline-block rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                              Missing Info
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => setEditingStudent(st)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-[#F97316] transition-colors hover:bg-[#F97316]/10"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                          Edit Details
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        <td className="px-6 py-4 text-stone-700">
+                          {st.parentPhone && st.parentPhone !== "N/A" ? (
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="h-3.5 w-3.5 text-stone-400" />
+                              {st.parentPhone}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-stone-400">N/A</span>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 text-stone-700">
+                          {st.address && st.address !== "N/A" ? (
+                            <div className="flex max-w-xs items-center gap-1.5 truncate">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-stone-400" />
+                              <span className="truncate">{st.address}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-stone-400">N/A</span>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setEditingStudent(st)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 px-3 py-1.5 text-xs font-semibold text-[#F97316] transition-colors hover:bg-[#F97316]/10"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                            Edit Details
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
       {editingStudent && (
         <EditStudentModal
           student={editingStudent}

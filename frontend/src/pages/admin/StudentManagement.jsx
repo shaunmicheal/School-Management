@@ -89,6 +89,7 @@ const StudentManagement = () => {
       }, 5000);
     }
   };
+
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
 
@@ -106,6 +107,7 @@ const StudentManagement = () => {
       });
     }
   };
+
   const handleTransfer = async (id, name) => {
     if (
       !window.confirm(
@@ -157,9 +159,9 @@ const StudentManagement = () => {
           }`}
         >
           {message.type === "success" ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
           ) : (
-            <AlertCircle className="h-5 w-5 text-rose-600" />
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
           )}
           <span>{message.text}</span>
         </div>
@@ -168,7 +170,7 @@ const StudentManagement = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm h-fit">
           <div className="flex items-center gap-2 mb-6 border-b border-stone-100 pb-4">
-            <UserPlus className="h-5 w-5 text-[#F97316]" />
+            <UserPlus className="h-5 w-5 text-[#F97316] shrink-0" />
             <h2 className="text-lg font-bold text-[#361F1D]">
               Enroll New Student
             </h2>
@@ -251,83 +253,85 @@ const StudentManagement = () => {
 
         <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
           <div className="flex items-center gap-2 bg-[#4A2E2B] px-6 py-4 text-white">
-            <Users className="h-5 w-5 text-[#F97316]" />
+            <Users className="h-5 w-5 text-[#F97316] shrink-0" />
             <h2 className="font-bold">Learner Directory ({students.length})</h2>
           </div>
 
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
-                <th className="px-6 py-3">Learner Name</th>
-                <th className="px-6 py-3">Class</th>
-                <th className="px-6 py-3">Date of Birth</th>
-                <th className="px-6 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100 text-sm">
-              {students.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan="4"
-                    className="px-6 py-8 text-center text-stone-500"
-                  >
-                    No learners enrolled yet.
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[550px]">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50 text-xs font-semibold uppercase text-stone-500">
+                  <th className="px-6 py-3">Learner Name</th>
+                  <th className="px-6 py-3">Class</th>
+                  <th className="px-6 py-3">Date of Birth</th>
+                  <th className="px-6 py-3 text-center">Actions</th>
                 </tr>
-              ) : (
-                students.map((st) => {
-                  const studentName =
-                    st.name ||
-                    (st.firstName && `${st.firstName} ${st.lastName}`) ||
-                    "Unnamed Learner";
-
-                  return (
-                    <tr
-                      key={st.id}
-                      className="hover:bg-stone-50 transition-colors"
+              </thead>
+              <tbody className="divide-y divide-stone-100 text-sm">
+                {students.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="4"
+                      className="px-6 py-8 text-center text-stone-500"
                     >
-                      <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                        {studentName}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F97316]/10 px-3 py-1 text-xs font-semibold text-[#F97316]">
-                          <GraduationCap className="h-3.5 w-3.5" />
-                          {st.class?.name || st.className || "Unassigned"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-stone-600">
-                        {st.dateOfBirth || st.dob
-                          ? new Date(
-                              st.dateOfBirth || st.dob,
-                            ).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleTransfer(st.id, studentName)}
-                            title="Transfer Student"
-                            className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
-                          >
-                            <ArrowRightLeft className="h-3.5 w-3.5" />
-                            Transfer
-                          </button>
-                          <button
-                            onClick={() => handleDelete(st.id, studentName)}
-                            title="Delete Student"
-                            className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                      No learners enrolled yet.
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((st) => {
+                    const studentName =
+                      st.name ||
+                      (st.firstName && `${st.firstName} ${st.lastName}`) ||
+                      "Unnamed Learner";
+
+                    return (
+                      <tr
+                        key={st.id}
+                        className="hover:bg-stone-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 font-semibold text-[#361F1D]">
+                          {studentName}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F97316]/10 px-3 py-1 text-xs font-semibold text-[#F97316] whitespace-nowrap shrink-0">
+                            <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+                            {st.class?.name || st.className || "Unassigned"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-stone-600 whitespace-nowrap">
+                          {st.dateOfBirth || st.dob
+                            ? new Date(
+                                st.dateOfBirth || st.dob,
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleTransfer(st.id, studentName)}
+                              title="Transfer Student"
+                              className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors shrink-0"
+                            >
+                              <ArrowRightLeft className="h-3.5 w-3.5 shrink-0" />
+                              Transfer
+                            </button>
+                            <button
+                              onClick={() => handleDelete(st.id, studentName)}
+                              title="Delete Student"
+                              className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors shrink-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

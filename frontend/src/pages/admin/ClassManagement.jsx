@@ -97,74 +97,79 @@ const ClassManagement = () => {
           }`}
         >
           {message.type === "success" ? (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
           ) : (
-            <AlertCircle className="h-5 w-5 text-rose-600" />
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
           )}
           <span>{message.text}</span>
         </div>
       )}
 
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-[#4A2E2B] text-white text-xs uppercase font-semibold">
-              <th className="px-6 py-4">Class Name</th>
-              <th className="px-6 py-4">Assigned Teacher</th>
-              <th className="px-6 py-4">Assign / Change Teacher</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-stone-100 text-sm">
-            {classes.map((cls) => (
-              <tr key={cls.id} className="hover:bg-stone-50 transition-colors">
-                <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F97316]/10 text-[#F97316]">
-                      <GraduationCap className="h-5 w-5" />
-                    </div>
-                    <span>{cls.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  {cls.teacher ? (
-                    <div className="flex items-center gap-2">
-                      <UserCheck className="h-4 w-4 text-emerald-600" />
-                      <div>
-                        <p className="font-medium text-stone-800">
-                          {cls.teacher.name}
-                        </p>
-                        <p className="text-xs text-stone-400">
-                          {cls.teacher.email}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
-                      Unassigned
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <select
-                    disabled={updatingId === cls.id}
-                    value={cls.teacherId || ""}
-                    onChange={(e) =>
-                      handleAssignTeacher(cls.id, e.target.value)
-                    }
-                    className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-[#F97316] focus:outline-none focus:ring-1 focus:ring-[#F97316] disabled:opacity-50"
-                  >
-                    <option value="">-- Unassigned --</option>
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.id}>
-                        {teacher.name} ({teacher.email})
-                      </option>
-                    ))}
-                  </select>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="bg-[#4A2E2B] text-white text-xs uppercase font-semibold">
+                <th className="px-6 py-4">Class Name</th>
+                <th className="px-6 py-4">Assigned Teacher</th>
+                <th className="px-6 py-4">Assign / Change Teacher</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-stone-100 text-sm">
+              {classes.map((cls) => (
+                <tr
+                  key={cls.id}
+                  className="hover:bg-stone-50 transition-colors"
+                >
+                  <td className="px-6 py-4 font-semibold text-[#361F1D]">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F97316]/10 text-[#F97316] shrink-0">
+                        <GraduationCap className="h-5 w-5" />
+                      </div>
+                      <span>{cls.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {cls.teacher ? (
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <p className="font-medium text-stone-800">
+                            {cls.teacher.name}
+                          </p>
+                          <p className="text-xs text-stone-400">
+                            {cls.teacher.email}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="inline-block rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
+                        Unassigned
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
+                    <select
+                      disabled={updatingId === cls.id}
+                      value={cls.teacherId || ""}
+                      onChange={(e) =>
+                        handleAssignTeacher(cls.id, e.target.value)
+                      }
+                      className="w-full sm:w-auto rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-800 shadow-sm focus:border-[#F97316] focus:outline-none focus:ring-1 focus:ring-[#F97316] disabled:opacity-50"
+                    >
+                      <option value="">-- Unassigned --</option>
+                      {teachers.map((teacher) => (
+                        <option key={teacher.id} value={teacher.id}>
+                          {teacher.name} ({teacher.email})
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
