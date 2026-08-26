@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma/client"
 }
 
 datasource db {
@@ -17,15 +16,22 @@ enum Gender {
   FEMALE
 }
 
+enum StudentStatus {
+  ACTIVE
+  TRANSFERRED
+  GRADUATED
+}
+
 model User {
-  id              Int          @id @default(autoincrement())
-  name            String
-  email           String       @unique
-  password        String
-  role            Role         @default(TEACHER)
-  createdAt       DateTime     @default(now())
-  class           Class?       @relation("ClassTeacher")
-  attendanceMarked Attendance[] @relation("MarkedBy")
+  id               Int            @id @default(autoincrement())
+  name             String
+  email            String         @unique
+  password         String
+  role             Role           @default(TEACHER)
+  createdAt        DateTime       @default(now())
+  class            Class?         @relation("ClassTeacher")
+  attendanceMarked Attendance[]   @relation("MarkedBy")
+  notifications    Notification[] @relation("UserNotifications")
 }
 
 model Class {
@@ -37,7 +43,7 @@ model Class {
 }
 
 model Student {
-  id          Int          @id @default(autoincrement())
+  id          Int           @id @default(autoincrement())
   firstName   String
   lastName    String
   dateOfBirth DateTime
@@ -45,8 +51,9 @@ model Student {
   parentName  String
   parentPhone String
   address     String
-  classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
+  status      StudentStatus @default(ACTIVE)
+  classId     Int?
+  class       Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
   attendance  Attendance[]
 }
 
@@ -55,9 +62,19 @@ model Attendance {
   date       DateTime @default(now())
   present    Boolean  @default(true)
   studentId  Int
-  student    Student  @relation(fields: [studentId], references: [id])
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   markedById Int
   markedBy   User     @relation("MarkedBy", fields: [markedById], references: [id])
 
   @@unique([studentId, date])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

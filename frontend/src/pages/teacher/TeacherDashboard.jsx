@@ -5,6 +5,7 @@ import {
   getClassStudents,
 } from "../../services/studentService";
 import API from "../../services/api";
+import NotificationBell from "../../components/NotificationBell";
 import {
   Users,
   Edit2,
@@ -19,9 +20,7 @@ const EditStudentModal = ({ student, onClose, onUpdated }) => {
   const parseDate = (dateString) => {
     if (!dateString) return "";
     const parsed = new Date(dateString);
-    return isNaN(parsed.getTime())
-      ? ""
-      : parsed.toISOString().split("T")[0];
+    return isNaN(parsed.getTime()) ? "" : parsed.toISOString().split("T")[0];
   };
 
   const [formData, setFormData] = useState({
@@ -238,13 +237,16 @@ const TeacherDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#361F1D]">Teacher Portal</h1>
-        <p className="text-sm text-stone-500">
-          {assignedClass
-            ? `Assigned Class: ${assignedClass.name}`
-            : "Manage class attendance and student rosters."}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[#361F1D]">Teacher Portal</h1>
+          <p className="text-sm text-stone-500">
+            {assignedClass
+              ? `Assigned Class: ${assignedClass.name}`
+              : "Manage class attendance and student rosters."}
+          </p>
+        </div>
+        <NotificationBell />
       </div>
 
       {!assignedClass ? (

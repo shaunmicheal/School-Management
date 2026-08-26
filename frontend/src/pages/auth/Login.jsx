@@ -2,6 +2,8 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
+import logo from "../../assets/Logo.jpg";
+import bgImage from "../../assets/bg-image.jpeg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -36,29 +38,38 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg border border-stone-200">
-        <div className="text-center mb-8">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4A2E2B] text-white font-bold text-xl shadow-md">
-            RECD
+    <div
+      className="flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat p-4 relative"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url(${bgImage})`,
+      }}
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white/20 p-8 shadow-2xl backdrop-blur-md border border-white/30 text-white">
+        <div className="text-center mb-6">
+          <div className="mx-auto flex justify-center mb-3">
+            <img
+              src={logo}
+              alt="Rumbidzai ECD Centre Logo"
+              className="h-28 w-auto object-contain drop-shadow-md"
+            />
           </div>
-          <h2 className="mt-4 text-2xl font-bold text-[#361F1D]">
-            Rumbidzai ECD School
+          <h2 className="text-2xl font-bold text-white drop-shadow">
+            Rumbidzai ECD Centre
           </h2>
-          <p className="text-sm text-stone-500 mt-1">
+          <p className="text-sm text-white/80 mt-1">
             Sign in to access your portal
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-md bg-rose-50 p-3 text-sm text-rose-700 border border-rose-200">
+          <div className="mb-4 rounded-lg bg-rose-500/20 p-3 text-sm text-rose-100 border border-rose-500/30 backdrop-blur-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Email Address
             </label>
             <input
@@ -66,13 +77,13 @@ const Login = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md border border-stone-300 px-3 py-2 text-stone-800 placeholder-stone-400 focus:border-[#F97316] focus:outline-none focus:ring-1 focus:ring-[#F97316]"
-              placeholder="e.g. user@school.com"
+              className="w-full rounded-lg border border-white/30 bg-white/80 px-3.5 py-2.5 text-stone-900 placeholder-stone-500 focus:border-[#F97316] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F97316] transition"
+              placeholder="e.g. teacher@rumbidzai.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Password
             </label>
             <input
@@ -80,7 +91,7 @@ const Login = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md border border-stone-300 px-3 py-2 text-stone-800 placeholder-stone-400 focus:border-[#F97316] focus:outline-none focus:ring-1 focus:ring-[#F97316]"
+              className="w-full rounded-lg border border-white/30 bg-white/80 px-3.5 py-2.5 text-stone-900 placeholder-stone-500 focus:border-[#F97316] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#F97316] transition"
               placeholder="Enter your account password"
             />
           </div>
@@ -88,7 +99,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-[#F97316] py-2.5 font-medium text-white shadow transition-colors hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 disabled:opacity-50"
+            className="w-full rounded-lg bg-[#D9531E] py-3 font-semibold text-white shadow-lg transition-all hover:bg-[#EA580C] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:ring-offset-2 disabled:opacity-50"
           >
             {isSubmitting ? "Signing in..." : "Sign In"}
           </button>

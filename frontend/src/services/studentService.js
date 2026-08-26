@@ -26,6 +26,16 @@ export const createStudent = async (studentData) => {
   return response.data;
 };
 
+export const deleteStudent = async (studentId) => {
+  const response = await API.delete(`/students/${studentId}`);
+  return response.data;
+};
+
+export const transferStudent = async (studentId) => {
+  const response = await API.patch(`/students/${studentId}/transfer`);
+  return response.data;
+};
+
 export const getTeacherClassDetails = async (teacherId) => {
   const response = await API.get(`/classes`);
   return response.data.find((c) => c.teacherId === teacherId);
@@ -35,6 +45,7 @@ export const getClassStudents = async (classId) => {
   const response = await API.get(`/classes/${classId}`);
   return response.data.students || [];
 };
+
 export const submitAttendance = async (classId, date, attendanceRecords) => {
   const payload = {
     classId: parseInt(classId, 10),
@@ -49,6 +60,7 @@ export const submitAttendance = async (classId, date, attendanceRecords) => {
   const response = await API.post("/attendance", payload);
   return response.data;
 };
+
 export const getAttendanceLogs = async (date, classId) => {
   const params = {};
   if (date) params.date = date;

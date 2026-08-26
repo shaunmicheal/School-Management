@@ -1,4 +1,4 @@
-const prisma = require("../../db");
+const prisma = require("../prisma.js");
 
 async function getAllClasses(req, res) {
   try {
@@ -20,7 +20,9 @@ async function getClassById(req, res) {
       where: { id: parseInt(classId) },
       include: {
         teacher: { select: { id: true, name: true, email: true } },
-        students: true,
+        students: {
+          where: { status: "ACTIVE" },
+        },
       },
     });
 
@@ -91,4 +93,110 @@ async function assignTeacher(req, res) {
   }
 }
 
-module.exports = { getAllClasses, getClassById, assignTeacher };
+async function addStudentToClass(req, res) {
+  const {
+    firstName,
+    lastName,
+    dateOfBirth,
+    gender,
+    parentName,
+    parentPhone,
+    address,
+    classId,
+  } = req.body;
+  const parsedClassId = parseInt(classId);
+
+  try {
+    const targetClass = await prisma.class.findUnique({
+      where: { id: parsedClassId },
+      select: { teacherId: true, name: true },
+    });
+
+    if (!targetClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const newStudent = await prisma.student.create({
+      data: {
+        firstName,
+        lastName,
+        dateOfBirth: new Date(dateOfBirth),
+        gender,
+        parentName,
+        parentPhone,
+        address,
+        classId: parsedClassId,
+      },
+    });
+
+    if (targetClass.teacherId) {
+      await prisma.notification.create({
+        data: {
+          userId: targetClass.teacherId,
+          title: "New Student Added",
+          message: `${firstName} ${lastName} has been added to ${targetClass.name}.`,
+        },
+      });
+    }
+
+    res.status(201).json(newStudent);
+  } catch (error) {
+    console.error("Add Student Error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+}
+
+async function transferStudent(req, res) {
+  const { studentId } = req.params;
+  const parsedStudentId = parseInt(studentId);
+
+  try {
+    const student = await prisma.student.findUnique({
+      where: { id: parsedStudentId },
+      include: { class: true },
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const teacherId = student.class?.teacherId;
+    const studentName = `${student.firstName} ${student.lastName}`;
+    const className = student.class?.name || "assigned class";
+
+    await prisma.$transaction(async (tx) => {
+      await tx.student.update({
+        where: { id: parsedStudentId },
+        data: {
+          status: "TRANSFERRED",
+          classId: null,
+        },
+      });
+
+      if (teacherId) {
+        await tx.notification.create({
+          data: {
+            userId: teacherId,
+            title: "Student Transferred",
+            message: `${studentName} was removed from ${className} due to transfer.`,
+          },
+        });
+      }
+    });
+
+    res.status(200).json({
+      message: `${studentName} has been transferred and removed from class.`,
+    });
+  } catch (error) {
+    console.error("Transfer Student Error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+}
+
+module.exports = {
+  getAllClasses,
+  getClassById,
+  assignTeacher,
+  addStudentToClass,
+  transferStudent,
+};

@@ -1,0 +1,110 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
+
+const NotificationBell = () => {
+  const [notifications, setNotifications] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user?.id) return;
+
+      const { data } = await axios.get(
+        `http://localhost:5000/notifications/user/${user.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setNotifications(data);
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `http://localhost:5000/notifications/${id}/read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
+    } catch (err) {
+      console.error("Failed to mark notification as read", err);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 text-stone-700 hover:text-stone-900 focus:outline-none"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+          />
+        </svg>
+
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white">
+            {unreadCount}
+          </span>
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-80 rounded-xl bg-white shadow-2xl border border-stone-200 z-50 p-4">
+          <h4 className="font-bold text-stone-800 text-sm mb-3">
+            Notifications
+          </h4>
+          {notifications.length === 0 ? (
+            <p className="text-xs text-stone-500 py-2">No notifications yet.</p>
+          ) : (
+            <div className="max-h-64 overflow-y-auto space-y-2">
+              {notifications.map((n) => (
+                <div
+                  key={n.id}
+                  onClick={() => !n.isRead && handleMarkAsRead(n.id)}
+                  className={`p-3 rounded-lg text-xs cursor-pointer transition ${
+                    n.isRead
+                      ? "bg-stone-50 text-stone-600 border border-stone-100"
+                      : "bg-amber-50 text-amber-900 border border-amber-200 font-medium"
+                  }`}
+                >
+                  <p className="font-semibold">{n.title}</p>
+                  <p className="mt-0.5">{n.message}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NotificationBell;

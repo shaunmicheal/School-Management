@@ -11,6 +11,7 @@ router.get("/", async (req, res) => {
   try {
     if (req.user.role === "ADMIN") {
       const students = await prisma.student.findMany({
+        where: { status: "ACTIVE" },
         include: { class: true },
       });
       return res.json(students);
@@ -27,7 +28,10 @@ router.get("/", async (req, res) => {
     }
 
     const students = await prisma.student.findMany({
-      where: { classId: teacherClass.id },
+      where: {
+        classId: teacherClass.id,
+        status: "ACTIVE",
+      },
       include: { class: true },
     });
 
@@ -36,6 +40,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 router.post("/", requireAdmin, async (req, res) => {
   const {
     name,
@@ -75,17 +80,86 @@ router.post("/", requireAdmin, async (req, res) => {
       parentPhone: parentPhone || "N/A",
       address: address || "N/A",
       classId: parsedClassId,
+      status: "ACTIVE",
     };
 
     const student = await prisma.student.create({
       data: studentData,
     });
 
+    const targetClass = await prisma.class.findUnique({
+      where: { id: parsedClassId },
+      select: { teacherId: true, name: true },
+    });
+
+    if (targetClass && targetClass.teacherId) {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: targetClass.teacherId,
+          title: "New Student Added",
+          message: `${student.firstName} ${student.lastName} has been added to your class (${targetClass.name}).`,
+        },
+      });
+      console.log("--> Notification created successfully:", notification);
+    } else {
+      console.log(
+        "--> Warning: No teacher is currently assigned to this class.",
+      );
+    }
+
     res.status(201).json(student);
   } catch (error) {
+    console.error("Error in POST /students:", error);
     res.status(400).json({ message: error.message });
   }
 });
+
+router.patch("/:id/transfer", requireAdmin, async (req, res) => {
+  const studentId = parseInt(req.params.id, 10);
+
+  try {
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true },
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const teacherId = student.class?.teacherId;
+    const studentName = `${student.firstName} ${student.lastName}`;
+    const className = student.class?.name || "assigned class";
+
+    await prisma.$transaction(async (tx) => {
+      await tx.student.update({
+        where: { id: studentId },
+        data: {
+          status: "TRANSFERRED",
+          classId: null,
+        },
+      });
+
+      if (teacherId) {
+        await tx.notification.create({
+          data: {
+            userId: teacherId,
+            title: "Student Transferred",
+            message: `${studentName} was removed from ${className} due to transfer.`,
+          },
+        });
+      }
+    });
+
+    res.status(200).json({
+      message: `${studentName} was marked as transferred and removed from class.`,
+    });
+  } catch (error) {
+    console.error("Error in PATCH /students/:id/transfer:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.patch("/:id", async (req, res) => {
   const studentId = parseInt(req.params.id, 10);
 
@@ -105,6 +179,7 @@ router.patch("/:id", async (req, res) => {
       });
       return res.json(updated);
     }
+
     const teacherClass = await prisma.class.findUnique({
       where: { teacherId: req.user.id },
     });
@@ -134,6 +209,7 @@ router.patch("/:id", async (req, res) => {
       parsedFirstName = parts[0];
       parsedLastName = parts.slice(1).join(" ") || "N/A";
     }
+
     const updated = await prisma.student.update({
       where: { id: studentId },
       data: {
@@ -152,6 +228,7 @@ router.patch("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     await prisma.student.delete({

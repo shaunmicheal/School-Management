@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { getAllStudents, createStudent } from "../../services/studentService";
+import {
+  getAllStudents,
+  createStudent,
+  deleteStudent,
+  transferStudent,
+} from "../../services/studentService";
 import { getClasses } from "../../services/classService";
 import {
   UserPlus,
@@ -7,6 +12,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Users,
+  Trash2,
+  ArrowRightLeft,
 } from "lucide-react";
 
 const StudentManagement = () => {
@@ -80,6 +87,45 @@ const StudentManagement = () => {
       setTimeout(() => {
         setMessage({ type: "", text: "" });
       }, 5000);
+    }
+  };
+  const handleDelete = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to delete ${name}?`)) return;
+
+    try {
+      await deleteStudent(id);
+      setMessage({
+        type: "success",
+        text: `Student ${name} deleted successfully!`,
+      });
+      await fetchData();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to delete student.",
+      });
+    }
+  };
+  const handleTransfer = async (id, name) => {
+    if (
+      !window.confirm(
+        `Are you sure you want to mark ${name} as TRANSFERRED? This will remove them from active class rosters and notify their teacher.`,
+      )
+    )
+      return;
+
+    try {
+      await transferStudent(id);
+      setMessage({
+        type: "success",
+        text: `Student ${name} transferred and teacher notified!`,
+      });
+      await fetchData();
+    } catch (err) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Failed to transfer student.",
+      });
     }
   };
 
@@ -215,44 +261,70 @@ const StudentManagement = () => {
                 <th className="px-6 py-3">Learner Name</th>
                 <th className="px-6 py-3">Class</th>
                 <th className="px-6 py-3">Date of Birth</th>
+                <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100 text-sm">
               {students.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="3"
+                    colSpan="4"
                     className="px-6 py-8 text-center text-stone-500"
                   >
                     No learners enrolled yet.
                   </td>
                 </tr>
               ) : (
-                students.map((st) => (
-                  <tr
-                    key={st.id}
-                    className="hover:bg-stone-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-semibold text-[#361F1D]">
-                      {st.name ||
-                        (st.firstName && `${st.firstName} ${st.lastName}`) ||
-                        "Unnamed Learner"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F97316]/10 px-3 py-1 text-xs font-semibold text-[#F97316]">
-                        <GraduationCap className="h-3.5 w-3.5" />
-                        {st.class?.name || st.className || "Unassigned"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-stone-600">
-                      {st.dateOfBirth || st.dob
-                        ? new Date(
-                            st.dateOfBirth || st.dob,
-                          ).toLocaleDateString()
-                        : "N/A"}
-                    </td>
-                  </tr>
-                ))
+                students.map((st) => {
+                  const studentName =
+                    st.name ||
+                    (st.firstName && `${st.firstName} ${st.lastName}`) ||
+                    "Unnamed Learner";
+
+                  return (
+                    <tr
+                      key={st.id}
+                      className="hover:bg-stone-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-semibold text-[#361F1D]">
+                        {studentName}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F97316]/10 px-3 py-1 text-xs font-semibold text-[#F97316]">
+                          <GraduationCap className="h-3.5 w-3.5" />
+                          {st.class?.name || st.className || "Unassigned"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-stone-600">
+                        {st.dateOfBirth || st.dob
+                          ? new Date(
+                              st.dateOfBirth || st.dob,
+                            ).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleTransfer(st.id, studentName)}
+                            title="Transfer Student"
+                            className="inline-flex items-center gap-1 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
+                          >
+                            <ArrowRightLeft className="h-3.5 w-3.5" />
+                            Transfer
+                          </button>
+                          <button
+                            onClick={() => handleDelete(st.id, studentName)}
+                            title="Delete Student"
+                            className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-100 border border-rose-200 transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
