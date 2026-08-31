@@ -1,4 +1,4 @@
-const { PrismaClient } = require("../generated/prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const { Pool } = require("pg");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const bcrypt = require("bcrypt");
@@ -11,6 +11,7 @@ async function main() {
   console.log("🌱 Seeding database...");
 
   await prisma.attendance.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.student.deleteMany();
   await prisma.class.deleteMany();
   await prisma.user.deleteMany();
@@ -53,9 +54,8 @@ async function main() {
   });
 
   const grade1 = await prisma.class.create({
-    data: { name: "Grade 1" }, 
+    data: { name: "Grade 1" },
   });
-
   await prisma.student.createMany({
     data: [
       {
@@ -92,17 +92,20 @@ async function main() {
   });
 
   console.log("✅ Seeding complete!");
+  console.log("-----------------------------------------");
   console.log("Credentials:");
   console.log("  Admin: admin@rumbidzai.com / password123");
   console.log("  Teacher Mary (ECD A): mary@rumbidzai.com / password123");
   console.log("  Teacher John (ECD B): john@rumbidzai.com / password123");
+  console.log("-----------------------------------------");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seeding failed:", e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
