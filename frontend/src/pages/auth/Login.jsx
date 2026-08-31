@@ -2,8 +2,6 @@ import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { loginUser } from "../../services/authService";
-import logo from "../../assets/Logo.jpg";
-import bgImage from "../../assets/bg-image.jpeg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -41,14 +39,14 @@ const Login = () => {
     <div
       className="flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat p-4 relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url(${bgImage})`,
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/bg-image.jpeg')`,
       }}
     >
       <div className="w-full max-w-md rounded-2xl bg-white/20 p-8 shadow-2xl backdrop-blur-md border border-white/30 text-white">
         <div className="text-center mb-6">
           <div className="mx-auto flex justify-center mb-3">
             <img
-              src={logo}
+              src="/Logo.jpg"
               alt="Rumbidzai ECD Centre Logo"
               className="h-28 w-auto object-contain drop-shadow-md"
             />
