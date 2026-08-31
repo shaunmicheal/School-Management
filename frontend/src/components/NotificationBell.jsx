@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import API from "../api"; 
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -9,16 +9,9 @@ const NotificationBell = () => {
 
   const fetchNotifications = async () => {
     try {
-      const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user?.id) return;
-
-      const { data } = await axios.get(
-        `http://localhost:5000/notifications/user/${user.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const { data } = await API.get(`/notifications/${user.id}`);
       setNotifications(data);
     } catch (err) {
       console.error("Failed to fetch notifications", err);
@@ -33,16 +26,9 @@ const NotificationBell = () => {
 
   const handleMarkAsRead = async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.patch(
-        `http://localhost:5000/notifications/${id}/read`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      await API.patch(`/notifications/${id}/read`);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
     } catch (err) {
       console.error("Failed to mark notification as read", err);
