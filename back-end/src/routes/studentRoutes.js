@@ -40,7 +40,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 router.post("/", requireAdmin, async (req, res) => {
   const {
     name,
@@ -93,18 +92,13 @@ router.post("/", requireAdmin, async (req, res) => {
     });
 
     if (targetClass && targetClass.teacherId) {
-      const notification = await prisma.notification.create({
+      await prisma.notification.create({
         data: {
           userId: targetClass.teacherId,
           title: "New Student Added",
           message: `${student.firstName} ${student.lastName} has been added to your class (${targetClass.name}).`,
         },
       });
-      console.log("--> Notification created successfully:", notification);
-    } else {
-      console.log(
-        "--> Warning: No teacher is currently assigned to this class.",
-      );
     }
 
     res.status(201).json(student);
@@ -113,7 +107,6 @@ router.post("/", requireAdmin, async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-
 router.patch("/:id/transfer", requireAdmin, async (req, res) => {
   const studentId = parseInt(req.params.id, 10);
 
@@ -230,12 +223,40 @@ router.patch("/:id", async (req, res) => {
 });
 
 router.delete("/:id", requireAdmin, async (req, res) => {
+  const studentId = parseInt(req.params.id, 10);
+
   try {
-    await prisma.student.delete({
-      where: { id: parseInt(req.params.id, 10) },
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { class: true },
     });
+
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const teacherId = student.class?.teacherId;
+    const studentName = `${student.firstName} ${student.lastName}`;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.student.delete({
+        where: { id: studentId },
+      });
+
+      if (teacherId) {
+        await tx.notification.create({
+          data: {
+            userId: teacherId,
+            title: "Student Removed",
+            message: `${studentName} has been permanently deleted from your class.`,
+          },
+        });
+      }
+    });
+
     res.json({ message: "Student deleted successfully" });
   } catch (error) {
+    console.error("Error in DELETE /students/:id:", error);
     res.status(500).json({ error: error.message });
   }
 });

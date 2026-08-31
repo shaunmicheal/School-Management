@@ -3,9 +3,11 @@ const router = express.Router();
 const {
   getUserNotifications,
   markAsRead,
-} = require("../controllers/notificationController");
+} = require("../controllers/notificationController"); // Adjust path if needed
+const { authenticateToken } = require("../middleware/authMiddleware");
 
-router.get("/user/:userId", getUserNotifications);
+router.use(authenticateToken);
+router.get("/:userId", getUserNotifications);
 router.patch("/:id/read", markAsRead);
 
 module.exports = router;
